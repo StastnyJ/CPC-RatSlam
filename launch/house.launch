@@ -1,0 +1,39 @@
+<launch>
+  <arg name="x_pos" default="-3.0"/>
+  <arg name="y_pos" default="1.0"/>
+  <arg name="z_pos" default="0.0"/>
+  <arg name="rviz" default="true"/>
+
+  <include file="$(find turtlebot3_bringup)/launch/turtlebot3_remote.launch"></include>
+
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" value="$(find colored_point_cloud_rat_slam_ros)/worlds/turtlebot3_house.world"/>
+    <arg name="paused" value="false"/>
+    <arg name="use_sim_time" value="true"/>
+    <arg name="gui" value="false"/>
+    <arg name="headless" value="false"/>
+    <arg name="debug" value="false"/>
+  </include>
+  
+  <node name="color_cloud" pkg="colored_point_cloud_rat_slam_ros" type="color_cloud.py" >
+    <param name="pc2_topic_in"       value="velodyne_points" />     
+    <param name="image_topic_in"     value="camera/rgb/image_raw" />
+    <param name="pc2_topic_out"      value="rgb_cloud" />           
+    <param name="fov_width"          value="60" />                 
+    <param name="fov_height"         value="41" />                 
+    <param name="width_offset"       value="80" />                 
+    <param name="height_offset"      value="-70" />                 
+  </node>
+
+  <node name="lv_builder" pkg="colored_point_cloud_rat_slam_ros" type="lvbuilder.py" >
+    <param name="topic_in"              value="rgb_cloud" />
+    <param name="topic_out"             value="current_scene_descripion" />
+    <param name="topic_viz"             value="clustered_viz" />
+    <param name="topic_viz_convex_hull" value="convex_hull_viz" />
+    <param name="color_dimension_scale" value="0.001" />
+  </node>
+
+  <param name="robot_description" command="$(find xacro)/xacro --inorder $(find colored_point_cloud_rat_slam_ros)/urdf/turtlebot3_waffle_custom.urdf.xacro" />
+  <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-urdf -model turtlebot3 -x $(arg x_pos) -y $(arg y_pos) -z $(arg z_pos) -param robot_description" />
+  <node if="$(arg rviz)" name="rviz" pkg="rviz" type="rviz" args="-d $(find colored_point_cloud_rat_slam_ros)/rviz/pc.rviz"/>
+</launch>

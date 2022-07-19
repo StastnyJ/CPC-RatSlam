@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>colored_point_cloud_rat_slam_ros</name>
+  <version>0.0.1</version>
+  <description>
+    Desc
+  </description>
+  <license>Apache 2.0</license>
+  <author email="xstastnyj@gmail.com">Jakub Stastny</author>
+  <maintainer email="xstastnyj@gmail.com">Jakub Stastny</maintainer>
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>message_generation</build_depend>
+  <build_depend>message_runtime</build_depend>
+
+
+
+  <depend>roscpp</depend>
+  <depend>std_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>tf</depend>
+  <depend>gazebo_ros</depend>
+  <exec_depend>gazebo</exec_depend>
+  <exec_depend>turtlebot3_description</exec_depend>
+  <exec_depend>message_runtime</exec_depend>
+  <exec_depend>message_generation</exec_depend>
+  <export>
+    <gazebo_ros gazebo_media_path="${prefix}"/>
+    <gazebo_ros gazebo_model_path="${prefix}/models"/>
+  </export>
+</package>
