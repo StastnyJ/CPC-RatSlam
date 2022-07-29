@@ -14,6 +14,25 @@ from colormath.color_conversions import convert_color
 from colormath.color_diff import delta_e_cie2000
 from datetime import datetime
 from colored_point_cloud_rat_slam_ros.msg import LVDescription
+import os
+import torch
+import torch.nn as nn
+
+
+def loadModel(file: str, modelNumber: int):
+    model = None
+    if modelNumber == 1:
+        model = nn.Sequential(nn.Linear(512, 256), nn.Linear(256, 1), nn.Sigmoid())
+    if modelNumber == 2:
+        model = nn.Sequential(nn.Linear(512, 256), nn.Linear(256, 64), nn.Linear(64, 1), nn.Sigmoid())
+    if modelNumber == 3:
+        model = nn.Sequential(nn.Linear(512, 256), nn.Linear(256, 128), nn.Linear(128, 64), nn.Linear(64, 1), nn.Sigmoid())
+    if modelNumber == 4:
+        model = nn.Sequential(nn.Linear(512, 256), nn.Linear(256, 128), nn.Linear(128, 64), nn.Linear(64, 32), nn.Linear(32, 1), nn.Sigmoid())
+    model.load_state_dict(torch.load(file))
+    model.eval()
+    return model
+
 
 
 def getColorDifference(c1: Tuple[int, int, int], c2: Tuple[int, int, int]) -> float:
@@ -89,16 +108,17 @@ class LVObject:
 
 
 class LV:
-    def __init__(self, objects: List[LVObject], params: Params):
+    def __init__(self, objects: List[LVObject], params: Params, features: List[float]):
         self.objects = objects
         self.params = params
+        self.features = features
 
     @staticmethod
-    def parseLV(raw: str, params: Params) -> "LV":
+    def parseLV(raw: str, params: Params, features: List[float]) -> "LV":
         data = json.loads(raw)
-        return LV([LVObject(hexToRgb(d["color"]), d["center"], d["bondrySize"], d["volume"], d["area"], d["shape"], d["clusterSize"], params) for d in data], params)
+        return LV([LVObject(hexToRgb(d["color"]), d["center"], d["bondrySize"], d["volume"], d["area"], d["shape"], d["clusterSize"], params) for d in data], params, features)
 
-    def match(self, other: "LV") -> float:
+    def match(self, other: "LV", createThreshold: float, nn) -> float:
         particleCount = 0
         res = 0.0
         if len(self.objects) == 0:
@@ -106,7 +126,14 @@ class LV:
         for o in self.objects:
             res += o.clusterSize * o.findMostSimilarObject(other.objects)[0]
             particleCount += o.clusterSize
-        return res / particleCount
+        result = res / particleCount
+        if result >= createThreshold:
+            nnResult = nn(torch.tensor(self.features + other.features))
+            # rospy.logwarn(nnResult)
+            if nnResult > 0.5:
+                return result
+        return 0.0
+        
 
 
 class Node:
@@ -116,14 +143,15 @@ class Node:
         self.threshold = threshold
         self._savedViews: List[LV] = []
         self._params = Params(paramsArray)
+        self._nn = loadModel(os.path.dirname(os.path.realpath(__file__)) + "/model/model1.pth", 1)
 
     def _onReceive(self, rawData: LVDescription):
-        currentView = LV.parseLV(rawData.data, self._params)
+        currentView = LV.parseLV(rawData.data, self._params, rawData.features)
         start = datetime.now()
         bestViewIndex = -1
         bestSimilarity = -inf
         for (i, otherView) in enumerate(self._savedViews):
-            similarity = currentView.match(otherView)
+            similarity = currentView.match(otherView, self.threshold, self._nn)
             if similarity > bestSimilarity:
                 bestViewIndex = i
                 bestSimilarity = similarity
@@ -147,7 +175,9 @@ if __name__ == '__main__':
     topicOut = rospy.get_param('~topic_out', "irat_red/LocalView/Template")
     threshold = rospy.get_param('~new_view_threshold', 0.5)
 
-    Node(topicIn, topicOut, threshold=3.80785060e-01, paramsArray=[
+    Node(topicIn, topicOut,
+     threshold=3.80785060e-01,
+     paramsArray=[
         6.89214682e+00, 1.80208393e+01, 1.49458688e-01,
         6.44444083e-02, 1.74226278e+01, 9.28374238e-01,
         5.41219509e-01, 2.66566342e+00, 1.33238250e-02,
