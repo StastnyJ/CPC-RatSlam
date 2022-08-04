@@ -127,12 +127,13 @@ class LV:
             res += o.clusterSize * o.findMostSimilarObject(other.objects)[0]
             particleCount += o.clusterSize
         result = res / particleCount
-        if result >= createThreshold:
-            nnResult = nn(torch.tensor(self.features + other.features))
+        # if result >= createThreshold:
+            # nnResult = nn(torch.tensor(self.features + other.features))
             # rospy.logwarn(nnResult)
-            if nnResult > 0.5:
-                return result
-        return 0.0
+            # if nnResult > 0.5:
+                # return result
+        # return 0.0
+        return result
         
 
 
@@ -176,7 +177,8 @@ if __name__ == '__main__':
     threshold = rospy.get_param('~new_view_threshold', 0.5)
 
     Node(topicIn, topicOut,
-     threshold=3.80785060e-01,
+    #  threshold=3.80785060e-01,
+     threshold=0.9,
      paramsArray=[
         6.89214682e+00, 1.80208393e+01, 1.49458688e-01,
         6.44444083e-02, 1.74226278e+01, 9.28374238e-01,
