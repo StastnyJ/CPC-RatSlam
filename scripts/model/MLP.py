@@ -42,7 +42,7 @@ if __name__ == "__main__":
     print("Save folder path: ", end="")
     saveFolder = input()
 
-    epochs = 100000
+    epochs = 4000
 
     if modelNumber == 1:
         model = nn.Sequential(nn.Linear(512, 256), nn.Linear(256, 1), nn.Sigmoid())
@@ -59,7 +59,7 @@ if __name__ == "__main__":
     print("loading dataset")
 
     rawData = []
-    with open("../../datasets/warehouseWithSmallFeaturesPaired.json", "r") as f:
+    with open("../datasets/learningDataset.json", "r") as f:
         rawData = json.load(f)
 
     trainSamples = int(len(rawData) * 0.8)
@@ -75,12 +75,15 @@ if __name__ == "__main__":
     trainY = torch.tensor([[float(x["c"])] for x in rawTrainData])
     testY = torch.tensor([[float(x["c"])] for x in rawTestData])
 
+    print(sum(float(x["c"]) for x in rawTestData))
+    print(len(rawTestData))
+
 
     print("training started")
 
     model.train()
     criterion = nn.MSELoss()
-    optimizer = torch.optim.SGD(model.parameters(), lr = 0.0002)
+    optimizer = torch.optim.SGD(model.parameters(), lr = 0.02)
 
     for e in range(epochs):
         start = datetime.now()
