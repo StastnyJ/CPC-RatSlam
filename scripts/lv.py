@@ -118,22 +118,24 @@ class LV:
         data = json.loads(raw)
         return LV([LVObject(hexToRgb(d["color"]), d["center"], d["bondrySize"], d["volume"], d["area"], d["shape"], d["clusterSize"], params) for d in data], params, features)
 
-    def match(self, other: "LV", createThreshold: float, nn) -> float:
-        particleCount = 0
-        res = 0.0
-        if len(self.objects) == 0:
-            return 1.0 if len(other.objects) == 0 else 0.0
-        for o in self.objects:
-            res += o.clusterSize * o.findMostSimilarObject(other.objects)[0]
-            particleCount += o.clusterSize
-        result = res / particleCount
+    def match(self, other: "LV", createThreshold: float, rejectThreshold: float, nn) -> float:
+        # particleCount = 0
+        # res = 0.0
+        # if len(self.objects) == 0:
+        #     return 1.0 if len(other.objects) == 0 else 0.0
+        # for o in self.objects:
+        #     res += o.clusterSize * o.findMostSimilarObject(other.objects)[0]
+        #     particleCount += o.clusterSize
+        # result = res / particleCount
         # if result >= createThreshold:
-            # nnResult = nn(torch.tensor(self.features + other.features))
-            # rospy.logwarn(nnResult)
-            # if nnResult > 0.5:
-                # return result
-        # return 0.0
-        return result
+        #     nnResult = nn(torch.tensor(self.features + other.features))
+        #     # rospy.logwarn(nnResult)
+        #     if nnResult > rejectThreshold:
+        #         return result
+        #     else:
+        #         return 0.0
+        # return result
+        return nn(torch.tensor(self.features + other.features))
         
 
 
@@ -152,7 +154,7 @@ class Node:
         bestViewIndex = -1
         bestSimilarity = -inf
         for (i, otherView) in enumerate(self._savedViews):
-            similarity = currentView.match(otherView, self.threshold, self._nn)
+            similarity = currentView.match(otherView, self.threshold, 0.46, self._nn) # TODO var
             if similarity > bestSimilarity:
                 bestViewIndex = i
                 bestSimilarity = similarity
@@ -178,13 +180,22 @@ if __name__ == '__main__':
 
     Node(topicIn, topicOut,
     #  threshold=3.80785060e-01,
-     threshold=0.9,
-     paramsArray=[
-        6.89214682e+00, 1.80208393e+01, 1.49458688e-01,
-        6.44444083e-02, 1.74226278e+01, 9.28374238e-01,
-        5.41219509e-01, 2.66566342e+00, 1.33238250e-02,
-        1.72236808e+01, 1.47960297e+01, 2.48803591e-01
-    ])
+    #  paramsArray=[
+    #     6.89214682e+00, 1.80208393e+01, 1.49458688e-01,
+    #     6.44444083e-02, 1.74226278e+01, 9.28374238e-01,
+    #     5.41219509e-01, 2.66566342e+00, 1.33238250e-02,
+    #     1.72236808e+01, 1.47960297e+01, 2.48803591e-01
+    # ]
+    threshold=0.737,
+    paramsArray=[
+        1.58773, 22.3013, 0.0406,
+        0.221766, 4.691886, 0.82588,
+        0.026518, 15.95429, 0.058236,
+        11.919109, 7.489252, 0.79746627
+    ] 
+    )
+
+
     while not rospy.is_shutdown():
         rospy.spin()
 

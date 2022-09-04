@@ -1,8 +1,53 @@
 import json
 import random
+import os
+import sys
+import inspect
+
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parentdir = os.path.dirname(currentdir)
+sys.path.insert(0, parentdir)
+
 from lv import LV, Params
 import numpy as np
 import matplotlib.pyplot as plt
+
+
+
+def createMLDataset(inputFile: str, outputFile: str):
+    data = []
+    posThreshold = 0.5
+    rotThreshold = 0.2
+    with open(inputFile, "r") as f:
+        data = json.load(f)
+
+    print(len(data))
+    pairedData = []
+    for i in range(len(data)):
+        for j in range(i + 1, len(data)):
+            pairedData.append({"T1": data[i], "T2": data[j]})
+
+    finalData = []
+    for d in pairedData:
+        t1 = d["T1"]
+        t2 = d["T2"]
+        x,y,a = t1["position"]
+        mx,my,ma = t2["position"]
+        isPositive = (mx - x)**2 + (my - y) ** 2 < posThreshold ** 2 and min(abs(a - ma), abs(abs(a - ma) - 2)) < rotThreshold
+        finalData.append({"d": t1["features"] + t2["features"], "c": 1 if isPositive else 0})
+
+
+
+    positives = [x for x in finalData if x["c"] == 1][:5000]
+    negatives = [x for x in finalData if x["c"] == 0][:5000]
+    result = positives + negatives
+    random.shuffle(result)
+    print(len(data))
+    print(len(result))
+    with open(outputFile, "w") as f:
+        json.dump(result, f)
+
+createMLDataset("../datasets/scenesWarehouseWithFeatures.json", "../datasets/learningDataset.json")
 
 def pairAndClassifyDataset(inputFile: str, outputFile: str):
     data = []
