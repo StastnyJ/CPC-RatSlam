@@ -1,9 +1,15 @@
 
 <launch>
+	<arg name="lvAnal" default="false"/>
 
 	<!-- <machine name="local_alt" address="localhost" default="true" /> -->
 	
-	<node name="RatSLAMLocalViewCells" pkg="ratslam_ros" type="ratslam_lv" args="$(find colored_point_cloud_rat_slam_ros)/config/ratslam_raw.txt.in _image_transport:=compressed" cwd="node" required="true" />
+	<!-- <node name="RatSLAMLocalViewCells" pkg="ratslam_ros" type="ratslam_lv" args="$(find colored_point_cloud_rat_slam_ros)/config/ratslam_raw.txt.in _image_transport:=compressed" cwd="node" required="true" />
 	<node name="RatSLAMPoseCells" pkg="ratslam_ros" type="ratslam_pc" args="$(find colored_point_cloud_rat_slam_ros)/config/ratslam_raw.txt.in _image_transport:=compressed" cwd="node" required="true" />
-	<node name="RatSLAMExperienceMap" pkg="ratslam_ros" type="ratslam_em" args="$(find colored_point_cloud_rat_slam_ros)/config/ratslam_raw.txt.in _image_transport:=compressed" cwd="node" required="true" />
+	<node name="RatSLAMExperienceMap" pkg="ratslam_ros" type="ratslam_em" args="$(find colored_point_cloud_rat_slam_ros)/config/ratslam_raw.txt.in _image_transport:=compressed" cwd="node" required="true" /> -->
+	<node name="RatSLAMLocalViewCells" pkg="ratslam_ros" type="ratslam_lv" args="$(find colored_point_cloud_rat_slam_ros)/config/ratslam_raw.txt.in" cwd="node" required="true" />
+	<node name="RatSLAMPoseCells" pkg="ratslam_ros" type="ratslam_pc" args="$(find colored_point_cloud_rat_slam_ros)/config/ratslam_raw.txt.in" cwd="node" required="true" />
+	<node name="RatSLAMExperienceMap" pkg="ratslam_ros" type="ratslam_em" args="$(find colored_point_cloud_rat_slam_ros)/config/ratslam_raw.txt.in" cwd="node" required="true" />
+
+	<node if="$(arg lvAnal)" name="lvAnal" pkg="colored_point_cloud_rat_slam_ros" type="lvAnalyzer.py" />
 </launch>

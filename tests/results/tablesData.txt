@@ -1,0 +1,117 @@
+ACCURACY
+
+Warehouse:
+- 1st stage only: 88.84 %
+- Both stages: 89.28 %
+- Original RAT-SLAM: 77.67 % 
+
+House:
+- 1st stage only: 86.69 %
+- Both stages:  86.94 %
+- Original RAT-SLAM: 41.25 %
+
+Hospital:
+- 1st stage only: 86.19 %
+- Both stages: 86.38 %
+- Original RAT-SLAM: 79.36 %
+
+----------------------------------------------------------
+
+AVERAGE FALSE POSITIVE ERROR
+
+Warehouse:
+- 1st stage only: 1.32 m, 0.644 relative to threshold
+- Both stages: 1.39 m, 0.735 relative to threshold
+- Original RAT-SLAM: 8.93 m, 10.16 relative to threshold
+
+House:
+- 1st stage only: 0.93 m, 0.165 relative to threshold
+- Both stages: 0.99 m, 0.234 relative to threshold
+- Original RAT-SLAM: 2.28 m, 1.84 relative to threshold
+
+Hospital:
+- 1st stage only: 1.00 m, 0.254 relative to threshold
+- Both stages: 1.00 m, 0.248 relative to threshold
+- Original RAT-SLAM: 6.56 m, 7.197 relative to threshold
+
+----------------------------------------------------------
+
+
+AVERAGE LV BUILDING TIME
+
+Warehouse:
+- 1st stage only: 42.432 ms
+- Both stages: 52.078 ms
+- Original RAT-SLAM: 2.053 ms
+
+House:
+- 1st stage only: 52.380 ms
+- Both stages:  88.265 ms
+- Original RAT-SLAM: 1.448 ms
+
+Hospital:
+- 1st stage only: 55.271 ms
+- Both stages: 65.609 ms
+- Original RAT-SLAM: 1.762 ms 
+
+----------------------------------------------------------
+
+
+AVERAGE LV MATCHING TIME
+
+Warehouse:
+- 1st stage only: 0.153 ms
+- Both stages: 0.159 ms
+- Original RAT-SLAM: 0.083 ms
+
+House:
+- 1st stage only: 0.396 ms
+- Both stages: 0.368 ms
+- Original RAT-SLAM: 0.137 ms
+
+Hospital:
+- 1st stage only: 0.399 ms
+- Both stages: 0.409 ms
+- Original RAT-SLAM: 0.092 ms
+
+----------------------------------------------------------
+
+
+AVERAGE NUMBER OF SAVED LVs
+
+Warehouse:
+- 1st stage only: 194
+- Both stages: 191
+- Original RAT-SLAM: 312
+
+House:
+- 1st stage only: 219
+- Both stages: 216
+- Original RAT-SLAM: 445
+
+Hospital:
+- 1st stage only: 151
+- Both stages: 148
+- Original RAT-SLAM: 219
+
+----------------------------------------------------------
+
+
+AVERAGE SIZE OF LV
+
+Warehouse:
+- 1st stage only: 78 B
+- Both stages: 334 B
+- Original RAT-SLAM: 600 B
+
+House:
+- 1st stage only: 128 B
+- Both stages: 384 B
+- Original RAT-SLAM: 600 B
+
+Hospital:
+- 1st stage only: 130 B
+- Both stages: 386 B
+- Original RAT-SLAM: 600 B
+
+----------------------------------------------------------

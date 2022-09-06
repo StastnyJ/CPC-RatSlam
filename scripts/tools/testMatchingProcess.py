@@ -17,20 +17,24 @@ from lvAnalyzer import Analyzer
 import json
 import numpy as np
 
-def loadModel(file: str, modelNumber: int):
+def loadModel(file: str):
     model = nn.Sequential(nn.Linear(512, 256), nn.Linear(256, 1), nn.Sigmoid())
+    # model = nn.Sequential(nn.Linear(512, 256), nn.Linear(256, 64), nn.Linear(64, 1), nn.Sigmoid())
     model.load_state_dict(torch.load(file))
     model.eval()
     return model
 
 dataset = []
-model = loadModel(os.path.dirname(os.path.realpath(__file__)) + "/../model/model_130.pth", 1)
+model = loadModel(os.path.dirname(os.path.realpath(__file__)) + "/../model/modelNew1.pth")
 
-with open("../datasets/scenesWarehouseWithFeatures.json", "r") as f:
+# with open("../datasets/scenesWarehouseWithFeatures.json", "r") as f:
+#     dataset = json.load(f)
+
+
+with open("../datasets/scenesSmallHouseWithFeatures.json", "r") as f:
     dataset = json.load(f)
 
-
-# with open("../scenesSmallHouseWithFeatures.json", "r") as f:
+# with open("../datasets/scenesHospitalWithFeatures.json", "r") as f:
 #     dataset = json.load(f)
 
 #threshold=0.73714
@@ -54,7 +58,7 @@ def test(th1, th2):
         bestViewIndex = -1
         bestSimilarity = -inf
         for (i, otherView) in enumerate(lvs):
-            similarity = lv.match(otherView, 0.73714, th2, model)
+            similarity = lv.match(otherView, 0.84, th2, model)
             if similarity > bestSimilarity:
                 bestViewIndex = i
                 bestSimilarity = similarity
@@ -79,8 +83,9 @@ def test(th1, th2):
 
 res = []
 for t1 in list(np.linspace(0, 1, 101)):
-    res.append(test(t1, 0.2))
-    print(str(t1))
+    actRes = test(t1, 0.00134)
+    res.append(actRes)
+    print(str(t1) + ": " + str(actRes))
 with open("output.json", "w") as f:
     json.dump(res, f)
 print(res)

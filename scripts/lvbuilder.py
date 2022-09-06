@@ -33,7 +33,7 @@ class ClusterDescription:
         self.convexHullVolume = self._convexHull.volume
         self.convexHullArea = self._convexHull.area
         self.clusterSize = len(cluster)
-        self.shape, self.shapeConfidence = self._detectShape()
+        # self.shape, self.shapeConfidence = self._detectShape()
     
     def _getAverageColor(self,  colorScaleFactor: float):
         r = median(p[3] / colorScaleFactor for p in self._rawPoints)
@@ -72,9 +72,9 @@ class ClusterDescription:
                 '],"bondrySize":[' + ",".join([str(x) for x in self.bondries])  +\
                 '],"volume":' + str(self.convexHullVolume) + \
                 ',"area":' +  str(self.convexHullArea) + \
-                ',"shape":"' + self.shape + \
-                '","shapeConfidence":' + str(self.shapeConfidence) + \
                 ',"clusterSize":' + str(self.clusterSize) + '}'
+                # '","shapeConfidence":' + str(self.shapeConfidence) + \
+                # ',"shape":"' + self.shape + \
 
 
 class DBScan:
@@ -170,6 +170,7 @@ class Node:
         self.model = loadModel(os.path.dirname(os.path.realpath(__file__)) + "/model/cls_model_62.pth")
 
     def _onReceive(self, cloudMsg):
+        start = datetime.now() # TIME MEASURE
         points = pc2msg_to_points(cloudMsg, includeColor=True, ignoreFloor=True)
         points = np.multiply(points, np.array([np.array([
             1, 1, 1, self.colorDimesionsScaling, self.colorDimesionsScaling, self.colorDimesionsScaling
@@ -177,15 +178,22 @@ class Node:
         clusters = DBScan(points, 0.6, 10).getClusters()
         if self.publishViz:
             self.publishClustersVisualization(clusters, cloudMsg.header.frame_id)
-        # start = datetime.now()
         descriptions = [ClusterDescription(c, self.colorDimesionsScaling) for c in clusters]
-        # rospy.logwarn((datetime.now() - start).total_seconds())
-        if self.publisHullsViz:
-            self.publishConvexHullsVisualization(descriptions, cloudMsg.header.frame_id)
+        # time = (datetime.now() - start).total_seconds() # END TIME MEASURE
+
+        # with open("buildingTimeMeasure.txt", "a") as f:
+        #     f.write(str(time) + "\n")
+            
+        # if self.publisHullsViz:
+        #     self.publishConvexHullsVisualization(descriptions, cloudMsg.header.frame_id)
         msg = LVDescription()
         msg.data = "[" + ",".join([str(des) for des in descriptions]) + "]"
         msg.header.stamp = cloudMsg.header.stamp
         msg.features = self.extractFeatures(points)
+        time = (datetime.now() - start).total_seconds() # END TIME MEASURE
+
+        with open("buildingTimeMeasure.txt", "a") as f:
+            f.write(str(time) + "\n")
         self.publisher.publish(msg)
 
     def extractFeatures(self, points):

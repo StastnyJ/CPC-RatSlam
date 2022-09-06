@@ -38,11 +38,12 @@ def createMLDataset(inputFile: str, outputFile: str):
 
 
 
-    positives = [x for x in finalData if x["c"] == 1][:5000]
-    negatives = [x for x in finalData if x["c"] == 0][:5000]
-    result = positives + negatives
+    positives = [x for x in finalData if x["c"] == 1]
+    random.shuffle(positives)
+    negatives = [x for x in finalData if x["c"] == 0]
+    random.shuffle(negatives)
+    result = positives[:5000] + negatives[:5000]
     random.shuffle(result)
-    print(len(data))
     print(len(result))
     with open(outputFile, "w") as f:
         json.dump(result, f)

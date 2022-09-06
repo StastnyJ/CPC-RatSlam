@@ -82,7 +82,7 @@ class LVObject:
         self.bondrySize = bondrySize
         self.volume = volume
         self.area = area
-        self.shape = shape
+        # self.shape = shape
         self.clusterSize = clusterSize
         self.params = params
 
@@ -116,26 +116,31 @@ class LV:
     @staticmethod
     def parseLV(raw: str, params: Params, features: List[float]) -> "LV":
         data = json.loads(raw)
-        return LV([LVObject(hexToRgb(d["color"]), d["center"], d["bondrySize"], d["volume"], d["area"], d["shape"], d["clusterSize"], params) for d in data], params, features)
+        return LV([LVObject(hexToRgb(d["color"]), d["center"], d["bondrySize"], d["volume"], d["area"], "shape", d["clusterSize"], params) for d in data], params, features)
 
     def match(self, other: "LV", createThreshold: float, rejectThreshold: float, nn) -> float:
-        # particleCount = 0
-        # res = 0.0
-        # if len(self.objects) == 0:
-        #     return 1.0 if len(other.objects) == 0 else 0.0
-        # for o in self.objects:
-        #     res += o.clusterSize * o.findMostSimilarObject(other.objects)[0]
-        #     particleCount += o.clusterSize
-        # result = res / particleCount
-        # if result >= createThreshold:
-        #     nnResult = nn(torch.tensor(self.features + other.features))
-        #     # rospy.logwarn(nnResult)
-        #     if nnResult > rejectThreshold:
-        #         return result
-        #     else:
-        #         return 0.0
-        # return result
-        return nn(torch.tensor(self.features + other.features))
+        start = datetime.now() # TIME MEASURE
+        particleCount = 0
+        res = 0.0
+        if len(self.objects) == 0:
+            return 1.0 if len(other.objects) == 0 else 0.0
+        for o in self.objects:
+            res += o.clusterSize * o.findMostSimilarObject(other.objects)[0]
+            particleCount += o.clusterSize
+        result = res / particleCount
+        if result >= createThreshold:
+            nnResult = nn(torch.tensor(self.features + other.features))
+            # rospy.logwarn(nnResult)
+            if nnResult >= rejectThreshold:
+                return result
+            else:
+                return 0.0
+        time = (datetime.now() - start).total_seconds() # END TIME MEASURE
+
+        # with open("matchingTimeMeasure.txt", "a") as f:
+        #     f.write(str(time) + "\n")
+
+        return result
         
 
 
@@ -154,7 +159,9 @@ class Node:
         bestViewIndex = -1
         bestSimilarity = -inf
         for (i, otherView) in enumerate(self._savedViews):
-            similarity = currentView.match(otherView, self.threshold, 0.46, self._nn) # TODO var
+            similarity = currentView.match(otherView, self.threshold, 0.4, self._nn) # TODO var
+            # similarity = currentView.match(otherView, 0.646, 0.4, self._nn) # TODO var
+            # similarity = currentView.match(otherView, 0.84, 0.00134, self._nn) # TODO var
             if similarity > bestSimilarity:
                 bestViewIndex = i
                 bestSimilarity = similarity
