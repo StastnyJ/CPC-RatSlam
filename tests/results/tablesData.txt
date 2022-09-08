@@ -36,6 +36,24 @@ Hospital:
 
 ----------------------------------------------------------
 
+MAX FALSE POSITIVE ERROR
+
+Warehouse:
+- 1st stage only: 3.06 m 
+- Both stages: 3.06 m
+- Original RAT-SLAM: 11.52 m
+
+House:
+- 1st stage only: 1.16 m
+- Both stages: 1.39 m
+- Original RAT-SLAM: 3.93 m
+
+Hospital:
+- 1st stage only: 1.52 m
+- Both stages: 1.51 m
+- Original RAT-SLAM: 14.57 m
+
+----------------------------------------------------------
 
 AVERAGE LV BUILDING TIME
 

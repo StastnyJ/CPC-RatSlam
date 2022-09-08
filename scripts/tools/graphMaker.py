@@ -21,6 +21,8 @@ def makeFpDetailsGraph(file, title):
 
     errors = [d["distance"] for d in data]
 
+    print(title + ": " + str(max(errors)))
+
     fig = px.scatter(data, x="False positive number", y="distance", color="category", title=title, range_y=(0,3.5))
     fig.add_hline(y=0.8, annotation={"text": "threshold"})
     fig.add_hline(y=1.6, annotation={"text": "2x threshold"})
@@ -85,21 +87,21 @@ def makePRCurve(files, curveNames, title):
 # makeTimeCurve(["../tests/house/matchingTimes1stStage.txt", "../tests/house/matchingTimesBoth.txt"], ["1st stage only", "Both stages"], "House LV matching times")
 # makeTimeCurve(["../tests/house/buildingTimes1stStage.txt", "../tests/house/buildingTimesBoth.txt"], ["1st stage only", "Both stages"], "House LV building times")
 
-makeTimeCurve(["../tests/hospital/matchingTimes1stStage.txt", "../tests/hospital/matchingTimesBoth.txt"], ["1st stage only", "Both stages"], "Hospital LV matching times")
+# makeTimeCurve(["../tests/hospital/matchingTimes1stStage.txt", "../tests/hospital/matchingTimesBoth.txt"], ["1st stage only", "Both stages"], "Hospital LV matching times")
 # makeTimeCurve(["../tests/hospital/buildingTimes1stStage.txt", "../tests/hospital/buildingTimesBoth.txt"], ["1st stage only", "Both stages"], "Hospital LV building times")
 
 
-# makeFpDetailsGraph("../tests/warehouse/fpDetails1stOnly.txt", "Warehouse First stage only")
-# makeFpDetailsGraph("../tests/warehouse/fpDetailsBoth.txt", "Warehouse Both stages")
-# makeFpDetailsGraph("../tests/warehouse/fpDetailsRatSlam.txt", "Warehouse RatSlam")
+makeFpDetailsGraph("../tests/warehouse/fpDetails1stOnly.txt", "Warehouse First stage only")
+makeFpDetailsGraph("../tests/warehouse/fpDetailsBoth.txt", "Warehouse Both stages")
+makeFpDetailsGraph("../tests/warehouse/fpDetailsRatSlam.txt", "Warehouse RatSlam")
 
-# makeFpDetailsGraph("../tests/house/fpDetailsFirst.txt", "House First stage only")
-# makeFpDetailsGraph("../tests/house/fpDetailsBoth.txt", "House Both stages")
-# makeFpDetailsGraph("../tests/house/fpDetailsRatSlam.txt", "House RatSlam")
+makeFpDetailsGraph("../tests/house/fpDetailsFirst.txt", "House First stage only")
+makeFpDetailsGraph("../tests/house/fpDetailsBoth.txt", "House Both stages")
+makeFpDetailsGraph("../tests/house/fpDetailsRatSlam.txt", "House RatSlam")
 
-# makeFpDetailsGraph("../tests/hospital/fpDetails1stStage.txt", "Hospital First stage only")
-# makeFpDetailsGraph("../tests/hospital/fpDetailsBoth.txt", "Hospital Both stages")
-# makeFpDetailsGraph("../tests/hospital/fpDetailsRatSlam.txt", "Hospital RatSlam")
+makeFpDetailsGraph("../tests/hospital/fpDetails1stStage.txt", "Hospital First stage only")
+makeFpDetailsGraph("../tests/hospital/fpDetailsBoth.txt", "Hospital Both stages")
+makeFpDetailsGraph("../tests/hospital/fpDetailsRatSlam.txt", "Hospital RatSlam")
 
 
 # makePRCurve([
