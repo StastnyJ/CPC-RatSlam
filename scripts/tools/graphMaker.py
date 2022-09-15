@@ -21,14 +21,14 @@ def makeFpDetailsGraph(file, title):
 
     errors = [d["distance"] for d in data]
 
-    print(title + ": " + str(max(errors)))
-
-    fig = px.scatter(data, x="False positive number", y="distance", color="category", title=title, range_y=(0,3.5))
+    fig = px.scatter(data, x="False positive number", y="distance", color="category",  range_y=(0,3.5))
     fig.add_hline(y=0.8, annotation={"text": "threshold"})
     fig.add_hline(y=1.6, annotation={"text": "2x threshold"})
     fig.add_hline(y=2.4, annotation={"text": "3x threshold"})
     fig.add_hline(y=sum(errors)/len(errors), line_color="orange", annotation={"bgcolor": "orange", "text": "average = " + str(sum(errors) / len(errors)) + " m = " + str(sum(errors) / (len(errors) * 0.8) - 1) + " thresholds"} )
-    fig.show()
+    # fig.show()
+    fig.update_layout(showlegend=False)
+    fig.write_image(title + ".pdf")
 
 def makeTimeCurve(files, curveNames, title):
     data = []
@@ -46,10 +46,12 @@ def makeTimeCurve(files, curveNames, title):
 
         averageTimes.append(sum(rawData) / len(rawData))
 
-    fig = px.scatter(data, y="time (ms)",x="scene number", title=title, color="approach")
+    fig = px.scatter(data, y="time (ms)",x="scene number", title=title, color="approach", width=800, height=400)
     for (i,t) in enumerate(averageTimes):
         fig.add_hline(y=t, line_color="orange", annotation={"bgcolor": "orange", "text": "average time [" + curveNames[i] + "]= " + str(t) + " ms"} )
-    fig.show()
+    # fig.show()
+    # fig.update_layout()
+    fig.write_image(title + ".pdf")
 
 def makePRCurve(files, curveNames, title):
     def parseRow(raw: str):
@@ -75,33 +77,33 @@ def makePRCurve(files, curveNames, title):
         } for d in rawData]
     
     fig = px.line(data, y="precission",x="recall", title=title, color="approach", markers=True)
-    fig.show()
-
-    fig = px.line(data, y="accuracy",x="threshold", title=title, color="approach", markers=True)
-    fig.show()
-
-
-# makeTimeCurve(["../tests/warehouse/matchingTimes1stStage.txt", "../tests/warehouse/matchingTimesBoth.txt"], ["1st stage only", "Both stages"], "Warehouse LV matching times")
-# makeTimeCurve(["../tests/warehouse/buildingTimes1stStage.txt", "../tests/warehouse/buildingTimesBoth.txt"], ["1st stage only", "Both stages"], "Warehouse LV building times")
-
-# makeTimeCurve(["../tests/house/matchingTimes1stStage.txt", "../tests/house/matchingTimesBoth.txt"], ["1st stage only", "Both stages"], "House LV matching times")
-# makeTimeCurve(["../tests/house/buildingTimes1stStage.txt", "../tests/house/buildingTimesBoth.txt"], ["1st stage only", "Both stages"], "House LV building times")
-
-# makeTimeCurve(["../tests/hospital/matchingTimes1stStage.txt", "../tests/hospital/matchingTimesBoth.txt"], ["1st stage only", "Both stages"], "Hospital LV matching times")
-# makeTimeCurve(["../tests/hospital/buildingTimes1stStage.txt", "../tests/hospital/buildingTimesBoth.txt"], ["1st stage only", "Both stages"], "Hospital LV building times")
+    # fig.show()
+    fig.write_image(title + ".pdf")
+    # fig = px.line(data, y="accuracy",x="threshold", title=title, color="approach", markers=True)
+    # fig.show()
 
 
-makeFpDetailsGraph("../tests/warehouse/fpDetails1stOnly.txt", "Warehouse First stage only")
-makeFpDetailsGraph("../tests/warehouse/fpDetailsBoth.txt", "Warehouse Both stages")
-makeFpDetailsGraph("../tests/warehouse/fpDetailsRatSlam.txt", "Warehouse RatSlam")
+makeTimeCurve(["../tests/warehouse/matchingTimes1stStage.txt", "../tests/warehouse/matchingTimesBoth.txt"], ["1st stage only", "Both stages"], "Warehouse LV matching times")
+makeTimeCurve(["../tests/warehouse/buildingTimes1stStage.txt", "../tests/warehouse/buildingTimesBoth.txt"], ["1st stage only", "Both stages"], "Warehouse LV building times")
 
-makeFpDetailsGraph("../tests/house/fpDetailsFirst.txt", "House First stage only")
-makeFpDetailsGraph("../tests/house/fpDetailsBoth.txt", "House Both stages")
-makeFpDetailsGraph("../tests/house/fpDetailsRatSlam.txt", "House RatSlam")
+makeTimeCurve(["../tests/house/matchingTimes1stStage.txt", "../tests/house/matchingTimesBoth.txt"], ["1st stage only", "Both stages"], "House LV matching times")
+makeTimeCurve(["../tests/house/buildingTimes1stStage.txt", "../tests/house/buildingTimesBoth.txt"], ["1st stage only", "Both stages"], "House LV building times")
 
-makeFpDetailsGraph("../tests/hospital/fpDetails1stStage.txt", "Hospital First stage only")
-makeFpDetailsGraph("../tests/hospital/fpDetailsBoth.txt", "Hospital Both stages")
-makeFpDetailsGraph("../tests/hospital/fpDetailsRatSlam.txt", "Hospital RatSlam")
+makeTimeCurve(["../tests/hospital/matchingTimes1stStage.txt", "../tests/hospital/matchingTimesBoth.txt"], ["1st stage only", "Both stages"], "Hospital LV matching times")
+makeTimeCurve(["../tests/hospital/buildingTimes1stStage.txt", "../tests/hospital/buildingTimesBoth.txt"], ["1st stage only", "Both stages"], "Hospital LV building times")
+
+
+# makeFpDetailsGraph("../tests/warehouse/fpDetails1stOnly.txt", "Warehouse First stage only")
+# makeFpDetailsGraph("../tests/warehouse/fpDetailsBoth.txt", "Warehouse Both stages")
+# makeFpDetailsGraph("../tests/warehouse/fpDetailsRatSlam.txt", "Warehouse RatSlam")
+
+# makeFpDetailsGraph("../tests/house/fpDetailsFirst.txt", "House First stage only")
+# makeFpDetailsGraph("../tests/house/fpDetailsBoth.txt", "House Both stages")
+# makeFpDetailsGraph("../tests/house/fpDetailsRatSlam.txt", "House RatSlam")
+
+# makeFpDetailsGraph("../tests/hospital/fpDetails1stStage.txt", "Hospital First stage only")
+# makeFpDetailsGraph("../tests/hospital/fpDetailsBoth.txt", "Hospital Both stages")
+# makeFpDetailsGraph("../tests/hospital/fpDetailsRatSlam.txt", "Hospital RatSlam")
 
 
 # makePRCurve([
