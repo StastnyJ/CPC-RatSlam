@@ -82,7 +82,6 @@ class LVObject:
         self.bondrySize = bondrySize
         self.volume = volume
         self.area = area
-        # self.shape = shape
         self.clusterSize = clusterSize
         self.params = params
 
@@ -102,7 +101,6 @@ class LVObject:
         distanceSim = 1 - sig(np.linalg.norm(np.subtract(self.center, other.center)), self.params.distanceThreshold, self.params.distanceA)
         sizeSim = 1 - sig(abs(self.volume - other.volume), self.params.sizeThreshold, self.params.sizeA)
         volumeAreaRatioSim = 1 - sig(abs(self.volume / self.area - other.volume / other.area), self.params.volumeAreaRatioThreshold, self.params.volumeAreaRatioA)
-        # rospy.logwarn((colorSim, distanceSim, sizeSim))
         weightsSum = self.params.colorWeight + self.params.distanceWeight + self.params.sizeWeight + self.params.volumeAreaRatioWeight
         return (colorSim * self.params.colorWeight + distanceSim * self.params.distanceWeight + sizeSim * self.params.sizeWeight + volumeAreaRatioSim * self.params.volumeAreaRatioWeight) / weightsSum
 
@@ -128,30 +126,40 @@ class LV:
             res += o.clusterSize * o.findMostSimilarObject(other.objects)[0]
             particleCount += o.clusterSize
         result = res / particleCount
-        if result >= createThreshold:
-            nnResult = nn(torch.tensor(self.features + other.features))
-            # rospy.logwarn(nnResult)
-            if nnResult >= rejectThreshold:
-                return result
-            else:
-                return 0.0
+        if nn is not None:
+            if result >= createThreshold:
+                nnResult = nn(torch.tensor(self.features + other.features))
+                if nnResult >= rejectThreshold:
+                    return result
+                else:
+                    return 0.0
         time = (datetime.now() - start).total_seconds() # END TIME MEASURE
 
-        # with open("matchingTimeMeasure.txt", "a") as f:
-        #     f.write(str(time) + "\n")
+        with open("matchingTimeMeasure.txt", "a") as f:
+            f.write(str(time) + "\n")
 
         return result
         
 
 
 class Node:
-    def __init__(self, topicIn: str, topicOut: str, threshold = 1.0, paramsArray: List[float] = []):
+    def __init__(
+        self, topicIn: str, topicOut: str, 
+        threshold = 1.0, s1Threshold = 1.0, s2Threshold = 1.0, 
+        useSecondStage = True, paramsArray: List[float] = []
+    ):
         self.publisher = rospy.Publisher(topicOut, ViewTemplate, queue_size=1)
         self.subscriber = rospy.Subscriber(topicIn, LVDescription, self._onReceive)
         self.threshold = threshold
+        self.s1Threshold = s1Threshold
+        self.s2Threshold = s2Threshold
+        self.useSecondStage = useSecondStage
         self._savedViews: List[LV] = []
         self._params = Params(paramsArray)
-        self._nn = loadModel(os.path.dirname(os.path.realpath(__file__)) + "/model/model1.pth", 1)
+        if useSecondStage:
+            self._nn = loadModel(os.path.dirname(os.path.realpath(__file__)) + "/model/model1.pth", 1)
+        else:
+            self._nn = None
 
     def _onReceive(self, rawData: LVDescription):
         currentView = LV.parseLV(rawData.data, self._params, rawData.features)
@@ -159,22 +167,20 @@ class Node:
         bestViewIndex = -1
         bestSimilarity = -inf
         for (i, otherView) in enumerate(self._savedViews):
-            similarity = currentView.match(otherView, self.threshold, 0.4, self._nn) # TODO var
+            similarity = currentView.match(otherView, self.s1Threshold, self.s2Threshold, self._nn) # TODO var
             # similarity = currentView.match(otherView, 0.646, 0.4, self._nn) # TODO var
             # similarity = currentView.match(otherView, 0.84, 0.00134, self._nn) # TODO var
             if similarity > bestSimilarity:
                 bestViewIndex = i
                 bestSimilarity = similarity
+        rospy.logwarn(bestSimilarity)
         if bestSimilarity < self.threshold:
             bestViewIndex = len(self._savedViews)
             self._savedViews.append(currentView)
-        # rospy.logwarn(((datetime.now() - start).total_seconds(), len(self._savedViews)))
         msg = ViewTemplate()
         msg.current_id = bestViewIndex
-        # msg.relative_rad = 0
         msg.relative_rad = bestSimilarity
         msg.header.stamp = rawData.header.stamp
-        # rospy.logwarn(bestSimilarity)
         self.publisher.publish(msg)
 
 
@@ -183,31 +189,34 @@ if __name__ == '__main__':
 
     topicIn = rospy.get_param('~topic_in', 'current_scene_descripion')
     topicOut = rospy.get_param('~topic_out', "irat_red/LocalView/Template")
-    threshold = rospy.get_param('~new_view_threshold', 0.5)
+    threshold = rospy.get_param('~new_view_threshold', 1.0)
+    s1Threshold = rospy.get_param('~s1_threshold', 1.0)
+    s2Threshold = rospy.get_param('~s2_threshold', 1.0)
+    paramsArray = json.loads(rospy.get_param("~params_array", "[1.58773, 22.3013, 0.0406, 0.221766, 4.691886, 0.82588, 0.026518, 15.95429, 0.058236, 11.919109, 7.489252, 0.79746627]"))
+    useSecondStage = rospy.get_param("~use_second_stage", True)
 
-    Node(topicIn, topicOut,
-    #  threshold=3.80785060e-01,
-    #  paramsArray=[
-    #     6.89214682e+00, 1.80208393e+01, 1.49458688e-01,
-    #     6.44444083e-02, 1.74226278e+01, 9.28374238e-01,
-    #     5.41219509e-01, 2.66566342e+00, 1.33238250e-02,
-    #     1.72236808e+01, 1.47960297e+01, 2.48803591e-01
-    # ]
-    threshold=0.737,
-    paramsArray=[
-        1.58773, 22.3013, 0.0406,
-        0.221766, 4.691886, 0.82588,
-        0.026518, 15.95429, 0.058236,
-        11.919109, 7.489252, 0.79746627
-    ] 
+    Node(
+        topicIn, topicOut,
+        threshold, s1Threshold, s2Threshold,
+        useSecondStage, paramsArray
     )
 
 
     while not rospy.is_shutdown():
         rospy.spin()
 
-#                1.3412207,11.51117396,0.07464632,
+#        1.3412207,11.51117396,0.07464632,
 #        0.04870507,8.427029,0.93453884,
 #        0.72795924,6.07578882,0.09846648,
 #        6.37736941,4.5353558,0.27635345
 
+#threshold=0.737
+
+
+
+
+
+
+
+#  threshold=3.80785060e-01,
+#  paramsArray=[6.89214682e+00, 1.80208393e+01, 1.49458688e-01, 6.44444083e-02, 1.74226278e+01, 9.28374238e-01, 5.41219509e-01, 2.66566342e+00, 1.33238250e-02, 1.72236808e+01, 1.47960297e+01, 2.48803591e-01]

@@ -127,7 +127,7 @@ class Analyzer:
         return self.all[id][1]
 
     def __str__(self):
-        return "saved: " + str(len(self.all.keys())) + ", FP: " + str(self.falsePositives) + ", FN:"  + str(self.falseNegatives) + ", total: " + str(self.totalReceived)
+        return "saved: " + str(len(self.all.keys())) + ", FP: " + str(self.falsePositives) + ", FN:"  + str(self.falseNegatives) + ", total: " + str(self.totalReceived) + ", accuracy: " + str((self.totalReceived - self.falseNegatives - self.falsePositives) / self.totalReceived)
 
     def saveDetails(self):
         with open("/home/stastnyj/Dev/ros/CPC-RatSlam/src/colored_point_cloud_rat_slam_ros/anal/fpDetails.txt", "w") as f:
@@ -169,12 +169,10 @@ class Node:
         cvImageNow = bridge.compressed_imgmsg_to_cv2(imageNow, "bgr8")
         firstMatchImg = bridge.compressed_imgmsg_to_cv2(self.analyzer.getMatchedImage(currentId), "bgr8") 
         rospy.logwarn(str(self.analyzer))
-        # with open("xxx.txt", "w") as f:
-        #     f.write("\n".join([" ".join([str(x) for x in row]) for row in self.sims]))
         Node.showMatch(cvImageNow, firstMatchImg, odomNow)
         if insertResult == "FP":
             bestImg = bridge.compressed_imgmsg_to_cv2(self.analyzer.falsePositiveDetails[-1][-1], "bgr8") if self.analyzer.falsePositiveDetails[-1][-1] is not None else None
-            Node.saveFalsePositive(cvImageNow, firstMatchImg, bestImg, self.analyzer.falsePositives)
+            Node.saveFalsePositive(cvImageNow, firstMatchImg, None, self.analyzer.falsePositives)
 
     def findBestImage(self, stamp: Time) -> CompressedImage:
         return Node.findBestMessage(self.imagesQueue, stamp)

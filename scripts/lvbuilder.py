@@ -3,7 +3,6 @@
 #https://ros-developer.com/2017/12/09/density-based-spatial-clustering-dbscan-with-python-code/
 
 import rospy
-import pcl
 import numpy as np
 from sensor_msgs.msg import PointCloud2
 import scipy
@@ -17,7 +16,6 @@ from statistics import median
 from utils.pointSearch import PointSearch, DistanceMatrixSearch, KDTreeSearch
 from utils.utils import  pc2msg_to_points, buildPC2Message, point_to_data, rgbToHex
 from colored_point_cloud_rat_slam_ros.msg import LVDescription
-import pyransac3d as pyrsc
 from model.PointNet import loadModel
 import os
 import torch
@@ -33,7 +31,6 @@ class ClusterDescription:
         self.convexHullVolume = self._convexHull.volume
         self.convexHullArea = self._convexHull.area
         self.clusterSize = len(cluster)
-        # self.shape, self.shapeConfidence = self._detectShape()
     
     def _getAverageColor(self,  colorScaleFactor: float):
         r = median(p[3] / colorScaleFactor for p in self._rawPoints)
@@ -53,18 +50,6 @@ class ClusterDescription:
             zMax = max(zMax, point[2])
         return (((xMin + xMax)/2, (yMin + yMax) / 2, (zMin + zMax) / 2), (xMax - xMin, yMax - yMin, zMax - zMin))
 
-    def _detectShape(self):
-        bestConfidence = 0
-        bestClass = "unknown"
-        points = np.array([self._rawCoordinates[x] for x in self._convexHull.vertices])
-        shapes = [("cylinder", pyrsc.Cylinder()), ("cuboid", pyrsc.Cuboid()), ("sphere", pyrsc.Sphere()), ("plane", pyrsc.Plane())]
-        for shapeClass, shapeModel in shapes:
-            inliners = shapeModel.fit(points, thresh=0.005, maxIteration = 10)[-1] # TODO improve
-            confidence = len(inliners) / len(points)
-            if confidence >= bestConfidence:
-                bestConfidence = confidence
-                bestClass = shapeClass
-        return (bestClass, bestConfidence)
 
     def __str__(self):
         return '{"color":"' + rgbToHex(self.color) + \
@@ -152,7 +137,7 @@ class DBScan:
 
 
 class Node:
-    def __init__(self, subscribeTopic, topicOut, visualizationPublishTopic="", convexHullsVisualizationPublishTopic="", colorDimesionsScaling=1.0):
+    def __init__(self, subscribeTopic, topicOut, visualizationPublishTopic="", convexHullsVisualizationPublishTopic="", colorDimesionsScaling=1.0, useSecondStage=True):
         self.publishViz = len(visualizationPublishTopic) > 0
         self.publisHullsViz = len(convexHullsVisualizationPublishTopic) > 0
         if self.publishViz:
@@ -167,7 +152,11 @@ class Node:
         self.publisher = rospy.Publisher(topicOut, LVDescription, queue_size=1)
         self.subscriber = rospy.Subscriber(subscribeTopic, PointCloud2, self._onReceive)
         self.colorDimesionsScaling = colorDimesionsScaling
-        self.model = loadModel(os.path.dirname(os.path.realpath(__file__)) + "/model/cls_model_62.pth")
+        self.useSecondStage = useSecondStage
+        if useSecondStage:
+            self.model = loadModel(os.path.dirname(os.path.realpath(__file__)) + "/model/cls_model_62.pth")
+        else:
+            self.model = None
 
     def _onReceive(self, cloudMsg):
         start = datetime.now() # TIME MEASURE
@@ -175,22 +164,20 @@ class Node:
         points = np.multiply(points, np.array([np.array([
             1, 1, 1, self.colorDimesionsScaling, self.colorDimesionsScaling, self.colorDimesionsScaling
         ]) for _ in range(len(points))]))
+        if len(points) == 0:
+            return
         clusters = DBScan(points, 0.6, 10).getClusters()
         if self.publishViz:
             self.publishClustersVisualization(clusters, cloudMsg.header.frame_id)
         descriptions = [ClusterDescription(c, self.colorDimesionsScaling) for c in clusters]
-        # time = (datetime.now() - start).total_seconds() # END TIME MEASURE
-
-        # with open("buildingTimeMeasure.txt", "a") as f:
-        #     f.write(str(time) + "\n")
-            
-        # if self.publisHullsViz:
-        #     self.publishConvexHullsVisualization(descriptions, cloudMsg.header.frame_id)
+        features = self.extractFeatures(points) if self.useSecondStage else []
+        time = (datetime.now() - start).total_seconds() # END TIME MEASURE
+        with open("buildingTimeMeasure.txt", "a") as f:
+            f.write(str(time) + "\n")
         msg = LVDescription()
         msg.data = "[" + ",".join([str(des) for des in descriptions]) + "]"
         msg.header.stamp = cloudMsg.header.stamp
-        msg.features = self.extractFeatures(points)
-        time = (datetime.now() - start).total_seconds() # END TIME MEASURE
+        msg.features = features
 
         with open("buildingTimeMeasure.txt", "a") as f:
             f.write(str(time) + "\n")
@@ -223,12 +210,14 @@ if __name__ == '__main__':
     visualizationTopic = rospy.get_param('~topic_viz', "")
     convexHullsVisualizationTopic = rospy.get_param('~topic_viz_convex_hull', "")
     colorDimensionScale = rospy.get_param('~color_dimension_scale', 0.001)
+    useSecondStage = rospy.get_param("~use_second_stage", True)
 
     Node(
         topicIn, topicOut,
         visualizationPublishTopic=visualizationTopic,
         convexHullsVisualizationPublishTopic=convexHullsVisualizationTopic,
-        colorDimesionsScaling=colorDimensionScale
+        colorDimesionsScaling=colorDimensionScale,
+        useSecondStage=useSecondStage
     )
     while not rospy.is_shutdown():
         rospy.spin()

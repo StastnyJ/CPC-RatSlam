@@ -9,7 +9,6 @@ import tf
 from tf.transformations import euler_from_quaternion
 from cv_bridge import CvBridge, CvBridgeError
 from utils.utils import point_to_data, buildPC2Message
-import struct
 from math import inf
 import cv2
 
@@ -18,19 +17,17 @@ import numpy as np
 
 imgQueueSize = 100
 
-# TODO move to utils
+
 def translation(vector, xyz):
     return list(vector[:3] + np.array(xyz)) + vector[3:]
 
 
-# TODO move to utils
 def transformPoints(trans, quat, points):
     points = [qvMult(quat, point) for point in points]
     points = [translation(point, trans) for point in points]
     return points
 
 
-# TODO move to utils
 def qvMult(q1, v1):
     v1_new = tf.transformations.unit_vector(v1[:3])
     q2 = list(v1_new)
@@ -44,7 +41,7 @@ def qvMult(q1, v1):
     vector = unit_vector * vector_len
     return list(vector) + v1[3:]
 
-# TODO sync with equivalent in utils
+
 def pc2msg_to_points(msg):
     points = []
     for point in sensor_msgs.point_cloud2.read_points(msg, skip_nans=True):

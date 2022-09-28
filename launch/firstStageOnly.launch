@@ -1,0 +1,34 @@
+<launch>
+  <arg name="rviz" default="false"/>
+  <arg name="lvAnal" default="true"/>
+
+  <node name="color_cloud" pkg="colored_point_cloud_rat_slam_ros" type="colorCloud.py" >
+    <param name="pc2_topic_in"          value="velodyne_points" />     
+    <param name="image_topic_in"        value="camera/image/compressed" />
+    <param name="camera_info_topic_in"  value="camera/camera_info" />
+    <param name="pc2_topic_out"         value="rgb_cloud" />
+    <param name="goal_frame"            value="odom" />
+  </node>
+
+  <node name="lv_builder" pkg="colored_point_cloud_rat_slam_ros" type="lvbuilder.py" >
+    <param name="topic_in"              value="rgb_cloud" />
+    <param name="topic_out"             value="current_scene_descripion" />
+    <param name="topic_viz"             value="clustered_viz" />
+    <param name="topic_viz_convex_hull" value="convex_hull_viz" />
+    <param name="color_dimension_scale" value="0.001" />
+    <param name="use_second_stage"      value="False" />
+  </node>
+
+  <node name="lv" pkg="colored_point_cloud_rat_slam_ros" type="lv.py" >
+    <param name="topic_in"              value="current_scene_descripion" />
+    <param name="topic_out"             value="/LocalView/Template" />
+    <param name="new_view_threshold"    value="0.737" />
+    <param name="s1_threshold"          value="0.0" />
+    <param name="s2_threshold"          value="0.0" />
+    <param name="params_array"          value="[1.58773, 22.3013, 0.0406, 0.221766, 4.691886, 0.82588, 0.026518, 15.95429, 0.058236, 11.919109, 7.489252, 0.79746627]" />
+    <param name="use_second_stage"      value="False" />
+  </node>
+
+  <node if="$(arg lvAnal)" name="lvAnal" pkg="colored_point_cloud_rat_slam_ros" type="lvAnalyzer.py" />
+  <node if="$(arg rviz)" name="rviz" pkg="rviz" type="rviz" args="-d $(find colored_point_cloud_rat_slam_ros)/rviz/pc.rviz"/>
+</launch>

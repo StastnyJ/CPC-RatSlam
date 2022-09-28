@@ -1,9 +1,6 @@
 <launch>
-  <arg name="x_pos" default="-3.0"/>
-  <arg name="y_pos" default="1.0"/>
-  <arg name="z_pos" default="0.0"/>
-  <arg name="rviz" default="true"/>
-  <arg name="lvAnal" default="false"/>
+  <arg name="rviz" default="false"/>
+  <arg name="lvAnal" default="true"/>
 
   <node name="color_cloud" pkg="colored_point_cloud_rat_slam_ros" type="colorCloud.py" >
     <param name="pc2_topic_in"          value="velodyne_points" />     
@@ -19,17 +16,19 @@
     <param name="topic_viz"             value="clustered_viz" />
     <param name="topic_viz_convex_hull" value="convex_hull_viz" />
     <param name="color_dimension_scale" value="0.001" />
+    <param name="use_second_stage"      value="True" />
   </node>
 
   <node name="lv" pkg="colored_point_cloud_rat_slam_ros" type="lv.py" >
     <param name="topic_in"              value="current_scene_descripion" />
     <param name="topic_out"             value="/LocalView/Template" />
-    <param name="new_view_threshold"    value="0.514" />
+    <param name="new_view_threshold"    value="0.737" />
+    <param name="s1_threshold"          value="0.84" />
+    <param name="s2_threshold"          value="0.00134" />
+    <param name="params_array"          value="[1.58773, 22.3013, 0.0406, 0.221766, 4.691886, 0.82588, 0.026518, 15.95429, 0.058236, 11.919109, 7.489252, 0.79746627]" />
+    <param name="use_second_stage"      value="True" />
   </node>
 
   <node if="$(arg lvAnal)" name="lvAnal" pkg="colored_point_cloud_rat_slam_ros" type="lvAnalyzer.py" />
-
-  <param name="robot_description" command="$(find xacro)/xacro --inorder $(find colored_point_cloud_rat_slam_ros)/urdf/turtlebot3_waffle_custom.urdf.xacro" />
-  <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-urdf -model turtlebot3 -x $(arg x_pos) -y $(arg y_pos) -z $(arg z_pos) -param robot_description" />
   <node if="$(arg rviz)" name="rviz" pkg="rviz" type="rviz" args="-d $(find colored_point_cloud_rat_slam_ros)/rviz/pc.rviz"/>
 </launch>

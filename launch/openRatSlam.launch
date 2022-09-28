@@ -1,6 +1,6 @@
 
 <launch>
-	<arg name="lvAnal" default="false"/>
+	<arg name="lvAnal" default="true"/>
 
 	<!-- <machine name="local_alt" address="localhost" default="true" /> -->
 	
