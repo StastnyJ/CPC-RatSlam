@@ -1,7 +1,5 @@
 # INSTALLATION
 
-
-
 ## Prerequisites
 
 - ROS (this repository was developed and tested on Ubuntu 20.04.4 LTS x86_64 with ROS **noetic**) - [Installation guide](http://wiki.ros.org/noetic/Installation/Ubuntu)
@@ -28,7 +26,31 @@
 1. Install all prerequisites and required python packages
 2. create a catkin workspace
 3. clone this repository in the src folder in the created workspace
-4. clone [OpenRatSLAM](https://github.com/davidmball/ratslam) repository ito the src folder next to this repository
+4. clone [OpenRatSLAM](https://github.com/davidmball/ratslam) repository into the src folder next to this repository
 5. run `catkin_make` command
+6. run `source devel/setup.sh`
 
-# EXPERIMENT REPLICATION 
+# EXPERIMENT REPLICATION
+
+## Classic experiment
+
+This experiment measures the total accuracy of the approach, time and memory performance and average false positive error. The PR curves and final paths from RatSLAM integration are not included.
+
+1. *if not first use:* clear results from previous experiments
+2. `roslaunch colored_point_cloud_rat_slam_ros firstStageOnly.launch` for 1st stage only or `roslaunch colored_point_cloud_rat_slam_ros bothStages.launch` for both stages
+3. `rosbag play <bag file name>` (rosbag files are uploaded to the "TODO path")
+4. *wait for the rosbag file to finish*
+5. Results can be found in:
+   - **Total accuracy**: Total accuracy is printed directly to the console
+   - **Information about all false positives:** in the folder `./anal/FPs/` are images of all generated false positives. Detailed information about false positives is generated in the file `./anal/FPs/fpDetails.txt` 
+   - **Time performance:** time performance is generated in files `./anal/buildingTimes.txt` and `./anal/matchingTimes.txt`
+   - **Memory consumption:** can be found in the file `./anal/memory.txt`
+  
+
+### **Data visualization**
+
+- To visualize data, run script `./scripts/tools/graphMaker.py`.
+## PR Curve generation
+
+
+## RatSLAM integration
